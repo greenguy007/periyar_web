@@ -16,9 +16,12 @@ let sessionTotal = 0;
 let itemCount = 0;
 
 // Settings (hardcoded defaults)
-const stabilityTime = 500; // 0.5 seconds (instant recording)
+const stabilityTime = 0; // Instant recording (no delay)
 const stabilityThreshold = 10; // 10 grams
 const serverUrl = "wss://backend-server-periyar.onrender.com/ws";
+
+// Recording mode: 'auto' or 'manual'
+let recordingMode = 'auto'; // default to auto-record
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -158,15 +161,20 @@ function checkWeightStability() {
     
     if (weightDifference <= stabilityThreshold && currentWeight > 0.010) {
         // Weight is stable
-        if (!stableWeightTimer) {
-            updateStatus('Measuring... Weight stable', 'measuring');
-            
-            // Start timer
-            stableWeightTimer = setTimeout(function() {
-                recordWeight();
-                stableWeightTimer = null;
-            }, stabilityTime);
+        updateStatus('✓ Stable - Ready to save', 'stable');
+        
+        // Auto-record mode: record instantly when stable
+        if (recordingMode === 'auto') {
+            if (!stableWeightTimer) {
+                // Record instantly
+                stableWeightTimer = setTimeout(function() {
+                    recordWeight();
+                    stableWeightTimer = null;
+                }, stabilityTime);
+            }
         }
+        // Manual mode: wait for Save button click
+        
     } else {
         // Weight is changing
         if (stableWeightTimer) {
@@ -177,6 +185,22 @@ function checkWeightStability() {
     }
     
     previousWeight = currentWeight;
+}
+
+// Manual save function
+function saveWeight() {
+    if (!isRecording) {
+        alert('Please start recording first');
+        return;
+    }
+    
+    if (currentWeight <= 0.010) {
+        alert('No weight detected');
+        return;
+    }
+    
+    // Record current weight
+    recordWeight();
 }
 
 // Record stable weight
@@ -235,6 +259,7 @@ function startRecording() {
     
     document.getElementById('startBtn').disabled = true;
     document.getElementById('stopBtn').disabled = false;
+    document.getElementById('saveBtn').disabled = false;
     document.getElementById('sessionStatus').textContent = 'Recording';
     document.getElementById('sessionStatus').classList.add('recording');
     
@@ -254,6 +279,7 @@ function stopRecording() {
     
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
+    document.getElementById('saveBtn').disabled = true;
     document.getElementById('sessionStatus').textContent = 'Stopped';
     document.getElementById('sessionStatus').classList.remove('recording');
     
@@ -290,8 +316,8 @@ function addTableRow(record) {
         <td>${record.time}</td>
     `;
     
-    // Add to top of table
-    tbody.insertBefore(row, tbody.firstChild);
+    // Add to bottom of table (chronological order)
+    tbody.appendChild(row);
 }
 
 // Update summary

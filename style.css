@@ -187,6 +187,12 @@ body {
     color: white;
 }
 
+.btn-save {
+    background: linear-gradient(135deg, #ff9800, #f57c00);
+    color: white;
+    font-weight: bold;
+}
+
 /* Summary */
 .summary {
     display: grid;
