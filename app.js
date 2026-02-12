@@ -16,7 +16,7 @@ let sessionTotal = 0;
 let itemCount = 0;
 
 // Settings (hardcoded defaults)
-const stabilityTime = 3000; // 3 seconds
+const stabilityTime = 500; // 0.5 seconds (instant recording)
 const stabilityThreshold = 10; // 10 grams
 const serverUrl = "wss://backend-server-periyar.onrender.com/ws";
 
