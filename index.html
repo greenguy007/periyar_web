@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Periyar Scale System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo-section">
+                <img src="logo.jpeg" alt="Periyar Scale System" class="logo">
+            </div>
+            <div class="connection-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="connectionStatus">Disconnected</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Weight Display Section -->
+            <section class="weight-display">
+                <div class="current-weight">
+                    <label>Current Weight</label>
+                    <div class="weight-value" id="currentWeight">0.000</div>
+                    <span class="weight-unit">kg</span>
+                </div>
+                <div class="status-message" id="statusMessage">
+                    <span class="status-icon">⚪</span>
+                    <span id="statusText">Waiting for connection...</span>
+                </div>
+            </section>
+
+            <!-- Control Buttons -->
+            <section class="controls">
+                <button class="btn btn-primary" id="connectBtn" onclick="toggleConnection()">
+                    <span id="connectBtnText">Connect</span>
+                </button>
+                <button class="btn btn-success" id="startBtn" onclick="startRecording()" disabled>
+                    ▶ Start Recording
+                </button>
+                <button class="btn btn-danger" id="stopBtn" onclick="stopRecording()" disabled>
+                    ■ Stop Recording
+                </button>
+                <button class="btn btn-secondary" onclick="clearData()">
+                    Clear Table
+                </button>
+                <button class="btn btn-info" onclick="exportCSV()">
+                    💾 Export CSV
+                </button>
+            </section>
+
+            <!-- Session Summary -->
+            <section class="summary">
+                <div class="summary-item">
+                    <label>Session Total</label>
+                    <div class="summary-value" id="sessionTotal">0.000 kg</div>
+                </div>
+                <div class="summary-item">
+                    <label>Items Recorded</label>
+                    <div class="summary-value" id="itemCount">0</div>
+                </div>
+                <div class="summary-item">
+                    <label>Session Status</label>
+                    <div class="summary-value" id="sessionStatus">Not Started</div>
+                </div>
+            </section>
+
+            <!-- Data Table -->
+            <section class="data-section">
+                <h2>Recorded Weights</h2>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>S.No</th>
+                                <th>Weight (kg)</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody">
+                            <tr class="empty-row">
+                                <td colspan="4">No data recorded yet. Click "Start Recording" to begin.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Periyar Scale System &copy; 2026 | Real-time Weight Monitoring</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
