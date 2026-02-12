@@ -166,8 +166,15 @@ function checkWeightStability() {
         if (stableCount >= STABLE_READINGS_NEEDED) {
             if (!isWeightStable) {
                 isWeightStable = true;
-                updateStatus('✓ Stable - Click Save to record', 'stable');
+                updateStatus('✓ Stable - Auto-recording...', 'stable');
                 console.log('Weight is now stable:', currentWeight.toFixed(3), 'kg');
+                
+                // AUTO-RECORD immediately when stable
+                recordWeight();
+                
+                // Reset for next item
+                isWeightStable = false;
+                stableCount = 0;
             }
         } else {
             updateStatus(`Stabilizing... (${stableCount}/${STABLE_READINGS_NEEDED})`, 'measuring');
@@ -260,18 +267,19 @@ function startRecording() {
     
     document.getElementById('startBtn').disabled = true;
     document.getElementById('stopBtn').disabled = false;
-    document.getElementById('saveBtn').disabled = false;
     document.getElementById('sessionStatus').textContent = 'Recording';
     document.getElementById('sessionStatus').classList.add('recording');
     
     updateStatus('Place item on scale...', 'measuring');
     
-    console.log('🔴 Recording started');
+    console.log('🔴 Recording started - Auto-record enabled');
 }
 
 // Stop recording session
 function stopRecording() {
     isRecording = false;
+    isWeightStable = false;
+    stableCount = 0;
     
     if (stableWeightTimer) {
         clearTimeout(stableWeightTimer);
@@ -280,7 +288,6 @@ function stopRecording() {
     
     document.getElementById('startBtn').disabled = false;
     document.getElementById('stopBtn').disabled = true;
-    document.getElementById('saveBtn').disabled = true;
     document.getElementById('sessionStatus').textContent = 'Stopped';
     document.getElementById('sessionStatus').classList.remove('recording');
     
