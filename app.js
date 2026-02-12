@@ -9,6 +9,8 @@ let previousWeight = 0;
 let stableWeightTimer = null;
 let weightHistory = [];
 let lastRecordedWeight = 0;
+let isWeightStable = false;
+let stableCount = 0;
 
 // Session data
 let sessionData = [];
@@ -16,17 +18,14 @@ let sessionTotal = 0;
 let itemCount = 0;
 
 // Settings (hardcoded defaults)
-const stabilityTime = 0; // Instant recording (no delay)
-const stabilityThreshold = 10; // 10 grams
+const STABLE_READINGS_NEEDED = 3; // Need 3 consecutive stable readings
+const STABILITY_THRESHOLD = 10; // 10 grams difference
 const serverUrl = "wss://backend-server-periyar.onrender.com/ws";
-
-// Recording mode: 'auto' or 'manual'
-let recordingMode = 'auto'; // default to auto-record
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Periyar Scale System initialized');
-    console.log(`Settings: Stability Time=${stabilityTime}ms, Threshold=${stabilityThreshold}g, Server=${serverUrl}`);
+    console.log(`Settings: Stable Readings=${STABLE_READINGS_NEEDED}, Threshold=${STABILITY_THRESHOLD}g, Server=${serverUrl}`);
 });
 
 // Toggle WebSocket connection
@@ -159,29 +158,27 @@ function handleWeightData(data) {
 function checkWeightStability() {
     const weightDifference = Math.abs((currentWeight - previousWeight) * 1000); // Convert to grams
     
-    if (weightDifference <= stabilityThreshold && currentWeight > 0.010) {
-        // Weight is stable
-        updateStatus('✓ Stable - Ready to save', 'stable');
+    // Check if weight is stable (not changing much)
+    if (weightDifference <= STABILITY_THRESHOLD && currentWeight > 0.010) {
+        stableCount++;
         
-        // Auto-record mode: record instantly when stable
-        if (recordingMode === 'auto') {
-            if (!stableWeightTimer) {
-                // Record instantly
-                stableWeightTimer = setTimeout(function() {
-                    recordWeight();
-                    stableWeightTimer = null;
-                }, stabilityTime);
+        // Need multiple stable readings
+        if (stableCount >= STABLE_READINGS_NEEDED) {
+            if (!isWeightStable) {
+                isWeightStable = true;
+                updateStatus('✓ Stable - Click Save to record', 'stable');
+                console.log('Weight is now stable:', currentWeight.toFixed(3), 'kg');
             }
+        } else {
+            updateStatus(`Stabilizing... (${stableCount}/${STABLE_READINGS_NEEDED})`, 'measuring');
         }
-        // Manual mode: wait for Save button click
-        
     } else {
-        // Weight is changing
-        if (stableWeightTimer) {
-            clearTimeout(stableWeightTimer);
-            stableWeightTimer = null;
+        // Weight is changing - reset stability
+        if (isWeightStable || stableCount > 0) {
+            isWeightStable = false;
+            stableCount = 0;
+            updateStatus('Measuring... Weight changing', 'measuring');
         }
-        updateStatus('Measuring... Weight changing', 'measuring');
     }
     
     previousWeight = currentWeight;
@@ -199,16 +196,27 @@ function saveWeight() {
         return;
     }
     
+    if (!isWeightStable) {
+        alert('Please wait for weight to stabilize');
+        return;
+    }
+    
     // Record current weight
     recordWeight();
+    
+    // Reset stability for next item
+    isWeightStable = false;
+    stableCount = 0;
+    updateStatus('Saved! Place next item...', 'stable');
 }
 
 // Record stable weight
 function recordWeight() {
-    // Don't record if weight is same as last recorded (duplicate)
+    // Don't record if weight is too close to last recorded (duplicate)
     const weightDifference = Math.abs((currentWeight - lastRecordedWeight) * 1000);
-    if (weightDifference < stabilityThreshold) {
+    if (weightDifference < STABILITY_THRESHOLD && lastRecordedWeight > 0) {
         console.log('Skipping duplicate weight');
+        alert('This weight was already recorded!');
         return;
     }
     
@@ -234,17 +242,7 @@ function recordWeight() {
     // Update summary
     updateSummary();
     
-    // Visual feedback
-    updateStatus('✓ Weight recorded: ' + currentWeight.toFixed(3) + ' kg', 'stable');
-    
     console.log('✅ Recorded:', record);
-    
-    // Reset status after 2 seconds
-    setTimeout(function() {
-        if (isRecording) {
-            updateStatus('Recording... Waiting for stable weight', 'measuring');
-        }
-    }, 2000);
 }
 
 // Start recording session
@@ -256,6 +254,9 @@ function startRecording() {
     
     isRecording = true;
     previousWeight = currentWeight;
+    isWeightStable = false;
+    stableCount = 0;
+    lastRecordedWeight = 0; // Reset for new session
     
     document.getElementById('startBtn').disabled = true;
     document.getElementById('stopBtn').disabled = false;
@@ -263,7 +264,7 @@ function startRecording() {
     document.getElementById('sessionStatus').textContent = 'Recording';
     document.getElementById('sessionStatus').classList.add('recording');
     
-    updateStatus('Recording... Waiting for stable weight', 'measuring');
+    updateStatus('Place item on scale...', 'measuring');
     
     console.log('🔴 Recording started');
 }
